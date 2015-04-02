@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Docker",""]],"mod":[["container",""],["info",""],["stats",""]]});
+initSidebarItems({"mod":[["container",""],["info",""],["stats",""]],"struct":[["Docker",""]]});
