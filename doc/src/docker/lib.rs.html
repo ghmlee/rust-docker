@@ -212,12 +212,64 @@
 <span id="170">170</span>
 <span id="171">171</span>
 <span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
 </pre><pre class='rust '>
 <span class='doccomment'>//! Docker</span>
 <span class='attribute'>#<span class='op'>!</span>[<span class='ident'>doc</span>(<span class='ident'>html_root_url</span><span class='op'>=</span><span class='string'>&quot;https://ghmlee.github.io/rust-docker/doc&quot;</span>)]</span>
+<span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>openssl</span>;
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>unix_socket</span>;
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rustc_serialize</span>;
 
+<span class='kw'>mod</span> <span class='ident'>tcp</span>;
 <span class='kw'>mod</span> <span class='ident'>unix</span>;
 <span class='kw'>mod</span> <span class='ident'>http</span>;
 <span class='kw'>mod</span> <span class='ident'>test</span>;
@@ -228,6 +280,7 @@
 
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='prelude-ty'>Result</span>, <span class='ident'>Error</span>, <span class='ident'>ErrorKind</span>};
 <span class='kw'>use</span> <span class='ident'>rustc_serialize</span>::<span class='ident'>json</span>;
+<span class='kw'>use</span> <span class='ident'>tcp</span>::<span class='ident'>TcpStream</span>;
 <span class='kw'>use</span> <span class='ident'>unix</span>::<span class='ident'>UnixStream</span>;
 <span class='kw'>use</span> <span class='ident'>http</span>::<span class='ident'>Http</span>;
 <span class='kw'>use</span> <span class='ident'>container</span>::<span class='ident'>Container</span>;
@@ -236,24 +289,58 @@
 <span class='kw'>use</span> <span class='ident'>image</span>::<span class='ident'>Image</span>;
 
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Docker</span> {
-    <span class='ident'>unix_stream</span>: <span class='ident'>UnixStream</span>,
+    <span class='ident'>protocol</span>: <span class='ident'>Protocol</span>,
+    <span class='ident'>tls</span>: <span class='ident'>bool</span>,
+    <span class='ident'>addr</span>: <span class='ident'>String</span>,
     <span class='ident'>http</span>: <span class='ident'>Http</span>
 }
 
+<span class='kw'>enum</span> <span class='ident'>Protocol</span> {
+    <span class='ident'>UNIX</span>,
+    <span class='ident'>TCP</span>
+}
+
 <span class='kw'>impl</span> <span class='ident'>Docker</span> {
-    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>() <span class='op'>-&gt;</span> <span class='ident'>Docker</span> {
-        <span class='kw'>let</span> <span class='ident'>addr</span> <span class='op'>=</span> <span class='string'>&quot;unix:///var/run/docker.sock&quot;</span>;
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>connect</span>(<span class='ident'>addr</span>: <span class='kw-2'>&amp;</span><span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Docker</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>components</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='ident'>addr</span>.<span class='ident'>split</span>(<span class='string'>&quot;://&quot;</span>).<span class='ident'>collect</span>();
-        <span class='kw'>if</span> <span class='ident'>components</span>.<span class='ident'>len</span>() <span class='op'>!=</span> <span class='number'>2</span> { <span class='comment'>/* error*/</span> }
-        <span class='kw'>let</span> _ <span class='op'>=</span> <span class='ident'>components</span>[<span class='number'>0</span>];
+        <span class='kw'>if</span> <span class='ident'>components</span>.<span class='ident'>len</span>() <span class='op'>!=</span> <span class='number'>2</span> {
+            <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
+                                 <span class='string'>&quot;The address is invalid.&quot;</span>);
+            <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+        }
+        
+        <span class='kw'>let</span> <span class='ident'>protocol</span> <span class='op'>=</span> <span class='ident'>components</span>[<span class='number'>0</span>];
         <span class='kw'>let</span> <span class='ident'>path</span> <span class='op'>=</span> <span class='ident'>components</span>[<span class='number'>1</span>];
 
+        <span class='kw'>let</span> <span class='ident'>protocol</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>protocol</span> {
+            <span class='string'>&quot;unix&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>Protocol</span>::<span class='ident'>UNIX</span>,
+            <span class='string'>&quot;tcp&quot;</span> <span class='op'>=&gt;</span> <span class='ident'>Protocol</span>::<span class='ident'>TCP</span>,
+            _ <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
+                                     <span class='string'>&quot;The protocol is not supported.&quot;</span>);
+                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+            }
+        };
+
         <span class='kw'>let</span> <span class='ident'>docker</span> <span class='op'>=</span> <span class='ident'>Docker</span> {
-            <span class='ident'>unix_stream</span>: <span class='ident'>UnixStream</span>::<span class='ident'>connect</span>(<span class='kw-2'>&amp;</span><span class='ident'>path</span>),
+            <span class='ident'>protocol</span>: <span class='ident'>protocol</span>,
+            <span class='ident'>tls</span>: <span class='boolval'>false</span>,
+            <span class='ident'>addr</span>: <span class='ident'>path</span>.<span class='ident'>to_string</span>(),
             <span class='ident'>http</span>: <span class='ident'>Http</span>::<span class='ident'>new</span>()
         };
-        <span class='kw'>return</span> <span class='ident'>docker</span>;
+        <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>docker</span>);
     }
+
+    <span class='comment'>/*pub fn connect_with_tls(addr: &amp;str) -&gt; Result&lt;Docker&gt; {
+        let docker = try!(Docker::connect(addr));
+        let tls_docker = Docker {
+            protocol: docker.protocol,
+            tls: true,
+            addr: docker.addr.clone(),
+            http: Http::new()
+        };
+        return Ok(tls_docker);
+    }*/</span>
 
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_containers</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>all</span>: <span class='ident'>bool</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Container</span><span class='op'>&gt;&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>a</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>all</span> {
@@ -261,13 +348,13 @@
             <span class='boolval'>false</span> <span class='op'>=&gt;</span> <span class='string'>&quot;0&quot;</span>
         };
         <span class='kw'>let</span> <span class='ident'>request</span> <span class='op'>=</span> <span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;GET /containers/json?all={}&amp;size=1 HTTP/1.1\r\n\r\n&quot;</span>, <span class='ident'>a</span>);
-        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>unix_stream</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
+        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
         <span class='kw'>let</span> <span class='ident'>response</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>http</span>.<span class='ident'>get_response</span>(<span class='kw-2'>&amp;</span><span class='ident'>raw</span>));
         <span class='kw'>let</span> <span class='ident'>body</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Container</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>) {
             <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
             <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
                 <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
-                                     <span class='string'>&quot;Container struct is invalid with a response.\n{}&quot;</span>);
+                                     <span class='string'>&quot;Container struct is invalid with a response.&quot;</span>);
                 <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
             }
         };
@@ -282,7 +369,7 @@
         }
 
         <span class='kw'>let</span> <span class='ident'>request</span> <span class='op'>=</span> <span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;GET /containers/{}/stats HTTP/1.1\r\n\r\n&quot;</span>, <span class='ident'>container</span>.<span class='ident'>Id</span>);
-        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>unix_stream</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
+        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
         <span class='kw'>let</span> <span class='ident'>response</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>http</span>.<span class='ident'>get_response</span>(<span class='kw-2'>&amp;</span><span class='ident'>raw</span>));
         <span class='kw'>let</span> <span class='ident'>body</span>: <span class='ident'>Stats</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>) {
             <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
@@ -301,13 +388,13 @@
             <span class='boolval'>false</span> <span class='op'>=&gt;</span> <span class='string'>&quot;0&quot;</span>
         };
         <span class='kw'>let</span> <span class='ident'>request</span> <span class='op'>=</span> <span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;GET /images/json?all={} HTTP/1.1\r\n\r\n&quot;</span>, <span class='ident'>a</span>);
-        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>unix_stream</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
+        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
         <span class='kw'>let</span> <span class='ident'>response</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>http</span>.<span class='ident'>get_response</span>(<span class='kw-2'>&amp;</span><span class='ident'>raw</span>));
         <span class='kw'>let</span> <span class='ident'>body</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Image</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>) {
             <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
             <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> {
                 <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
-                                     <span class='string'>&quot;Image struct is invalid with a response.\n{}&quot;</span>);
+                                     <span class='string'>&quot;Image struct is invalid with a response.&quot;</span>);
                 <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
             }
         };
@@ -316,7 +403,7 @@
 
     <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_info</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Info</span><span class='op'>&gt;</span> {
         <span class='kw'>let</span> <span class='ident'>request</span> <span class='op'>=</span> <span class='string'>&quot;GET /info HTTP/1.1\r\n\r\n&quot;</span>;
-        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>unix_stream</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
+        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
         <span class='kw'>let</span> <span class='ident'>response</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>http</span>.<span class='ident'>get_response</span>(<span class='kw-2'>&amp;</span><span class='ident'>raw</span>));
         <span class='kw'>let</span> <span class='ident'>body</span>: <span class='ident'>Info</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>) {
             <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
@@ -327,6 +414,19 @@
             }
         };
         <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>);
+    }
+
+    <span class='kw'>fn</span> <span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>buf</span>: <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
+        <span class='kw'>return</span> <span class='kw'>match</span> <span class='self'>self</span>.<span class='ident'>protocol</span> {
+            <span class='ident'>Protocol</span>::<span class='ident'>UNIX</span> <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>UnixStream</span>::<span class='ident'>connect</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>addr</span>);
+                <span class='ident'>stream</span>.<span class='ident'>read</span>(<span class='ident'>buf</span>)
+            }
+            <span class='ident'>Protocol</span>::<span class='ident'>TCP</span> <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>stream</span> <span class='op'>=</span> <span class='ident'>TcpStream</span>::<span class='ident'>connect</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>.<span class='ident'>addr</span>, <span class='self'>self</span>.<span class='ident'>tls</span>);
+                <span class='ident'>stream</span>.<span class='ident'>read</span>(<span class='ident'>buf</span>)
+            }
+        };
     }
 }
 
