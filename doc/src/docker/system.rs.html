@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="Source to the Rust file `src/info.rs`.">
+    <meta name="description" content="Source to the Rust file `src/system.rs`.">
     <meta name="keywords" content="rust, rustlang, rust-lang">
 
-    <title>info.rs.html -- source</title>
+    <title>system.rs.html -- source</title>
 
     <link rel="stylesheet" type="text/css" href="../../main.css">
 
@@ -101,7 +101,7 @@
 </pre><pre class='rust '>
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
 <span class='attribute'>#[<span class='ident'>allow</span>(<span class='ident'>non_snake_case</span>)]</span>
-<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Info</span> {
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>SystemInfo</span> {
     <span class='kw'>pub</span> <span class='ident'>Containers</span>: <span class='ident'>u64</span>,
     <span class='kw'>pub</span> <span class='ident'>Images</span>: <span class='ident'>u64</span>,
     <span class='kw'>pub</span> <span class='ident'>Driver</span>: <span class='ident'>String</span>,
@@ -127,9 +127,9 @@
     <span class='kw'>pub</span> <span class='ident'>OperatingSystem</span>: <span class='ident'>String</span>,
 }
 
-<span class='kw'>impl</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>Info</span> {
+<span class='kw'>impl</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>SystemInfo</span> {
     <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
-        <span class='kw'>let</span> <span class='ident'>info</span> <span class='op'>=</span> <span class='ident'>Info</span> {
+        <span class='kw'>let</span> <span class='ident'>system_info</span> <span class='op'>=</span> <span class='ident'>SystemInfo</span> {
             <span class='ident'>Containers</span>: <span class='self'>self</span>.<span class='ident'>Containers</span>,
             <span class='ident'>Images</span>: <span class='self'>self</span>.<span class='ident'>Images</span>,
             <span class='ident'>Driver</span>: <span class='self'>self</span>.<span class='ident'>Driver</span>.<span class='ident'>clone</span>(),
@@ -154,7 +154,7 @@
             <span class='ident'>DockerRootDir</span>: <span class='self'>self</span>.<span class='ident'>DockerRootDir</span>.<span class='ident'>clone</span>(),
             <span class='ident'>OperatingSystem</span>: <span class='self'>self</span>.<span class='ident'>OperatingSystem</span>.<span class='ident'>clone</span>()
         };
-        <span class='kw'>return</span> <span class='ident'>info</span>;
+        <span class='kw'>return</span> <span class='ident'>system_info</span>;
     }
 }
 </pre>
