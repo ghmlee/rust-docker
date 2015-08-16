@@ -16,8 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    var featureRegexp = new RegExp('^\s*#!\\[feature\\(\.*?\\)\\]');
-    var elements = document.querySelectorAll('pre.rust-example-rendered');
+    var elements = document.querySelectorAll('pre.rust');
 
     Array.prototype.forEach.call(elements, function(el) {
         el.onmouseover = function(e) {
@@ -30,14 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
             a.setAttribute('class', 'test-arrow');
 
             var code = el.previousElementSibling.textContent;
-
-            var channel = '';
-            if (featureRegexp.test(code)) {
-                channel = '&version=nightly';
-            }
-
             a.setAttribute('href', window.playgroundUrl + '?code=' +
-                           encodeURIComponent(code) + channel);
+                           encodeURIComponent(code));
             a.setAttribute('target', '_blank');
 
             el.appendChild(a);
