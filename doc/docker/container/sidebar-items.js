@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Container",""],["ContainerInfo",""],["Port",""]]});
+initSidebarItems({"struct":[["Container",""],["ContainerInfo",""],["HostConfig",""],["Port",""]]});

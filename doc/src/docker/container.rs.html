@@ -173,6 +173,26 @@
 <span id="131">131</span>
 <span id="132">132</span>
 <span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Error</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::{<span class='ident'>Display</span>, <span class='ident'>Formatter</span>};
@@ -180,6 +200,7 @@
 
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
 <span class='attribute'>#[<span class='ident'>allow</span>(<span class='ident'>non_snake_case</span>)]</span>
+<span class='comment'>//Labels, HostConfig</span>
 <span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Container</span> {
     <span class='kw'>pub</span> <span class='ident'>Id</span>: <span class='ident'>String</span>,
     <span class='kw'>pub</span> <span class='ident'>Image</span>: <span class='ident'>String</span>,
@@ -188,8 +209,10 @@
     <span class='kw'>pub</span> <span class='ident'>Created</span>: <span class='ident'>u64</span>,
     <span class='kw'>pub</span> <span class='ident'>Names</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span>,
     <span class='kw'>pub</span> <span class='ident'>Ports</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>Port</span><span class='op'>&gt;</span>,
-    <span class='kw'>pub</span> <span class='ident'>SizeRw</span>: <span class='ident'>u64</span>,
-    <span class='kw'>pub</span> <span class='ident'>SizeRootFs</span>: <span class='ident'>u64</span>
+    <span class='kw'>pub</span> <span class='ident'>SizeRw</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>u64</span><span class='op'>&gt;</span>, <span class='comment'>// I guess it is optional on Mac.</span>
+    <span class='kw'>pub</span> <span class='ident'>SizeRootFs</span>: <span class='ident'>u64</span>,
+    <span class='kw'>pub</span> <span class='ident'>Labels</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>String</span>, <span class='ident'>String</span><span class='op'>&gt;&gt;</span>,
+    <span class='kw'>pub</span> <span class='ident'>HostConfig</span>: <span class='ident'>HostConfig</span>
 }
 
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
@@ -199,6 +222,12 @@
     <span class='kw'>pub</span> <span class='ident'>PrivatePort</span>: <span class='ident'>u64</span>,
     <span class='kw'>pub</span> <span class='ident'>PublicPort</span>: <span class='prelude-ty'>Option</span><span class='op'>&lt;</span><span class='ident'>u64</span><span class='op'>&gt;</span>,
     <span class='kw'>pub</span> <span class='ident'>Type</span>: <span class='ident'>String</span>
+}
+
+<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
+<span class='attribute'>#[<span class='ident'>allow</span>(<span class='ident'>non_snake_case</span>)]</span>
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>HostConfig</span> {
+    <span class='kw'>pub</span> <span class='ident'>NetworkMode</span>: <span class='ident'>String</span>
 }
 
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
@@ -240,7 +269,9 @@
             <span class='ident'>Names</span>: <span class='self'>self</span>.<span class='ident'>Names</span>.<span class='ident'>clone</span>(),
             <span class='ident'>Ports</span>: <span class='self'>self</span>.<span class='ident'>Ports</span>.<span class='ident'>clone</span>(),
             <span class='ident'>SizeRw</span>: <span class='self'>self</span>.<span class='ident'>SizeRw</span>,
-            <span class='ident'>SizeRootFs</span>: <span class='self'>self</span>.<span class='ident'>SizeRootFs</span>
+            <span class='ident'>SizeRootFs</span>: <span class='self'>self</span>.<span class='ident'>SizeRootFs</span>,
+            <span class='ident'>Labels</span>: <span class='self'>self</span>.<span class='ident'>Labels</span>.<span class='ident'>clone</span>(),
+            <span class='ident'>HostConfig</span>: <span class='self'>self</span>.<span class='ident'>HostConfig</span>.<span class='ident'>clone</span>()
         };
         <span class='kw'>return</span> <span class='ident'>container</span>;
     }
@@ -269,6 +300,15 @@
         self.PublicPort = source.PublicPort.clone();
         self.Type = source.Type.clone();
     }*/</span>
+}
+
+<span class='kw'>impl</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>HostConfig</span> {
+    <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
+        <span class='kw'>let</span> <span class='ident'>host_config</span> <span class='op'>=</span> <span class='ident'>HostConfig</span> {
+            <span class='ident'>NetworkMode</span>: <span class='self'>self</span>.<span class='ident'>NetworkMode</span>.<span class='ident'>clone</span>()
+        };
+        <span class='kw'>return</span> <span class='ident'>host_config</span>;
+    }
 }
 
 <span class='kw'>impl</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>ContainerInfo</span> {
