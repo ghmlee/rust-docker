@@ -545,6 +545,59 @@
 <span id="503">503</span>
 <span id="504">504</span>
 <span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='self'>self</span>, <span class='prelude-ty'>Result</span>, <span class='ident'>ErrorKind</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>error</span>::<span class='ident'>Error</span>;
@@ -560,6 +613,7 @@
 <span class='kw'>use</span> <span class='ident'>stats</span>::<span class='ident'>Stats</span>;
 <span class='kw'>use</span> <span class='ident'>system</span>::<span class='ident'>SystemInfo</span>;
 <span class='kw'>use</span> <span class='ident'>image</span>::<span class='ident'>Image</span>;
+<span class='kw'>use</span> <span class='ident'>filesystem</span>::<span class='ident'>FilesystemChange</span>;
 <span class='kw'>use</span> <span class='ident'>openssl</span>;
 <span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
 <span class='kw'>use</span> <span class='ident'>test</span>;
@@ -919,6 +973,39 @@
         };
         <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>container_info</span>);
     }
+    
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>get_filesystem_changes</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>container</span>: <span class='kw-2'>&amp;</span><span class='ident'>Container</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>FilesystemChange</span><span class='op'>&gt;&gt;</span> {
+        <span class='kw'>let</span> <span class='ident'>request</span> <span class='op'>=</span> <span class='macro'>format</span><span class='macro'>!</span>(<span class='string'>&quot;GET /containers/{}/changes HTTP/1.1\r\n\r\n&quot;</span>, <span class='ident'>container</span>.<span class='ident'>Id</span>);
+        <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>read</span>(<span class='ident'>request</span>.<span class='ident'>as_bytes</span>()));
+        <span class='kw'>let</span> <span class='ident'>response</span> <span class='op'>=</span> <span class='macro'>try</span><span class='macro'>!</span>(<span class='self'>self</span>.<span class='ident'>http</span>.<span class='ident'>get_response</span>(<span class='kw-2'>&amp;</span><span class='ident'>raw</span>));
+        <span class='kw'>match</span> <span class='ident'>response</span>.<span class='ident'>status_code</span> {
+            <span class='number'>200</span> <span class='op'>=&gt;</span> {}
+            <span class='number'>400</span> <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
+                                         <span class='string'>&quot;Docker returns an error with 400 status code.&quot;</span>);
+                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+            }
+            <span class='number'>500</span> <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
+                                         <span class='string'>&quot;Docker returns an error with 500 status code.&quot;</span>);
+                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+            }
+            _ <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
+                                         <span class='string'>&quot;Docker returns an error with an invalid status code.&quot;</span>);
+                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+            }
+        }
+        <span class='kw'>let</span> <span class='ident'>filesystem_changes</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>FilesystemChange</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>.<span class='ident'>body</span>) {
+            <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
+            <span class='prelude-val'>Err</span>(<span class='ident'>e</span>) <span class='op'>=&gt;</span> {
+                <span class='kw'>let</span> <span class='ident'>err</span> <span class='op'>=</span> <span class='ident'>io</span>::<span class='ident'>Error</span>::<span class='ident'>new</span>(<span class='ident'>ErrorKind</span>::<span class='ident'>InvalidInput</span>,
+                                         <span class='ident'>e</span>.<span class='ident'>description</span>());
+                <span class='kw'>return</span> <span class='prelude-val'>Err</span>(<span class='ident'>err</span>);
+            }
+        };
+        <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>filesystem_changes</span>);
+    }
 
     <span class='kw'>fn</span> <span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>buf</span>: <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
         <span class='kw'>return</span> <span class='kw'>match</span> <span class='self'>self</span>.<span class='ident'>protocol</span> {
@@ -1047,6 +1134,25 @@
         _ <span class='op'>=&gt;</span> { <span class='macro'>assert</span><span class='macro'>!</span>(<span class='boolval'>false</span>); <span class='kw'>return</span>; }
     }
     <span class='kw'>let</span> _: <span class='ident'>Top</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>.<span class='ident'>body</span>) {
+        <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
+        <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> { <span class='macro'>assert</span><span class='macro'>!</span>(<span class='boolval'>false</span>); <span class='kw'>return</span>; }
+    };
+}
+
+<span class='attribute'>#[<span class='ident'>test</span>]</span>
+<span class='attribute'>#[<span class='ident'>cfg</span>(<span class='ident'>test</span>)]</span>
+<span class='kw'>fn</span> <span class='ident'>get_filesystem_changes</span>() {
+    <span class='kw'>let</span> <span class='ident'>http</span> <span class='op'>=</span> <span class='ident'>Http</span>::<span class='ident'>new</span>();
+    <span class='kw'>let</span> <span class='ident'>raw</span> <span class='op'>=</span> <span class='ident'>test</span>::<span class='ident'>get_filesystem_changes_response</span>();
+    <span class='kw'>let</span> <span class='ident'>response</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>http</span>.<span class='ident'>get_response</span>(<span class='kw-2'>&amp;</span><span class='ident'>raw</span>) {
+        <span class='prelude-val'>Ok</span>(<span class='ident'>response</span>) <span class='op'>=&gt;</span> <span class='ident'>response</span>,
+        <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> { <span class='macro'>assert</span><span class='macro'>!</span>(<span class='boolval'>false</span>); <span class='kw'>return</span>; }
+    };
+    <span class='kw'>match</span> <span class='ident'>response</span>.<span class='ident'>status_code</span> {
+        <span class='number'>200</span> <span class='op'>=&gt;</span> {}
+        _ <span class='op'>=&gt;</span> { <span class='macro'>assert</span><span class='macro'>!</span>(<span class='boolval'>false</span>); <span class='kw'>return</span>; }
+    }
+    <span class='kw'>let</span> _: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>FilesystemChange</span><span class='op'>&gt;</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>json</span>::<span class='ident'>decode</span>(<span class='kw-2'>&amp;</span><span class='ident'>response</span>.<span class='ident'>body</span>) {
         <span class='prelude-val'>Ok</span>(<span class='ident'>body</span>) <span class='op'>=&gt;</span> <span class='ident'>body</span>,
         <span class='prelude-val'>Err</span>(_) <span class='op'>=&gt;</span> { <span class='macro'>assert</span><span class='macro'>!</span>(<span class='boolval'>false</span>); <span class='kw'>return</span>; }
     };

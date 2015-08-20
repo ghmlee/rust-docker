@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `process` mod in crate `docker`.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, process">
+    <meta name="description" content="Source to the Rust file `src/filesystem.rs`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang">
 
-    <title>docker::process - Rust</title>
+    <title>filesystem.rs.html -- source</title>
 
     <link rel="stylesheet" type="text/css" href="../../main.css">
 
@@ -26,7 +26,7 @@
 
     <section class="sidebar">
         
-        <p class='location'><a href='../index.html'>docker</a></p><script>window.sidebarCurrent = {name: 'process', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+        
     </section>
 
     <nav class="sub">
@@ -40,30 +40,21 @@
         </form>
     </nav>
 
-    <section id='main' class="content mod">
-<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>docker</a>::<wbr><a class='mod' href=''>process</a></span><span class='out-of-band'><span id='render-detail'>
-            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
-                [<span class='inner'>&#x2212;</span>]
-            </a>
-        </span><a id='src-10382' class='srclink' href='../../src/docker/process.rs.html#1-103' title='goto source code'>[src]</a></span></h1>
-<h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
-<table>
-                    <tr class=' module-item'>
-                        <td><a class='struct' href='struct.Process.html'
-                               title='docker::process::Process'>Process</a></td>
-                        <td class='docblock short'>
-                             
-                        </td>
-                    </tr>
-                
-                    <tr class=' module-item'>
-                        <td><a class='struct' href='struct.Top.html'
-                               title='docker::process::Top'>Top</a></td>
-                        <td class='docblock short'>
-                             
-                        </td>
-                    </tr>
-                </table></section>
+    <section id='main' class="content source"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+</pre><pre class='rust '>
+<span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
+<span class='attribute'>#[<span class='ident'>allow</span>(<span class='ident'>non_snake_case</span>)]</span>
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>FilesystemChange</span> {
+    <span class='kw'>pub</span> <span class='ident'>Path</span>: <span class='ident'>String</span>,
+    <span class='kw'>pub</span> <span class='ident'>Kind</span>: <span class='ident'>u8</span>
+}
+</pre>
+</section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>
