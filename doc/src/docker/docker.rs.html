@@ -598,6 +598,10 @@
 <span id="556">556</span>
 <span id="557">557</span>
 <span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
 </pre><pre class='rust '>
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::{<span class='self'>self</span>, <span class='prelude-ty'>Result</span>, <span class='ident'>ErrorKind</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>error</span>::<span class='ident'>Error</span>;
@@ -1005,6 +1009,10 @@
             }
         };
         <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(<span class='ident'>filesystem_changes</span>);
+    }
+
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>export_container</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>container</span>: <span class='kw-2'>&amp;</span><span class='ident'>Container</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>()<span class='op'>&gt;</span> {
+        <span class='kw'>return</span> <span class='prelude-val'>Ok</span>(());
     }
 
     <span class='kw'>fn</span> <span class='ident'>read</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>buf</span>: <span class='kw-2'>&amp;</span>[<span class='ident'>u8</span>]) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
