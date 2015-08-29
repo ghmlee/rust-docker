@@ -186,16 +186,9 @@
 <span id="144">144</span>
 <span id="145">145</span>
 <span id="146">146</span>
-<span id="147">147</span>
-<span id="148">148</span>
-<span id="149">149</span>
-<span id="150">150</span>
-<span id="151">151</span>
-<span id="152">152</span>
-<span id="153">153</span>
 </pre><pre class='rust '>
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Error</span>;
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::{<span class='ident'>Display</span>, <span class='ident'>Formatter</span>};
+<span class='kw'>use</span> <span class='ident'>std</span>;
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>error</span>::<span class='ident'>Error</span>;
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>collections</span>::<span class='ident'>HashMap</span>;
 
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>RustcEncodable</span>, <span class='ident'>RustcDecodable</span>)]</span>
@@ -277,13 +270,13 @@
     }
 }
 
-<span class='kw'>impl</span> <span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>Container</span> {
-    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(), <span class='ident'>Error</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>Container</span> {
+    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='ident'>std</span>::<span class='ident'>result</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(), <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> {
         <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>f</span>, <span class='string'>&quot;{}&quot;</span>, <span class='self'>self</span>.<span class='ident'>Id</span>)
     }
 }
 
-<span class='kw'>impl</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>Port</span> {
+<span class='kw'>impl</span> <span class='ident'>std</span>::<span class='ident'>clone</span>::<span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>Port</span> {
     <span class='kw'>fn</span> <span class='ident'>clone</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='kw'>Self</span> {
         <span class='kw'>let</span> <span class='ident'>port</span> <span class='op'>=</span> <span class='ident'>Port</span> {
             <span class='ident'>IP</span>: <span class='self'>self</span>.<span class='ident'>IP</span>.<span class='ident'>clone</span>(),
@@ -293,13 +286,6 @@
         };
         <span class='kw'>return</span> <span class='ident'>port</span>;
     }
-    
-    <span class='comment'>/*fn clone_from(&amp;mut self, source: &amp;Self) {
-        self.IP = source.IP.clone();
-        self.PrivatePort = source.PrivatePort.clone();
-        self.PublicPort = source.PublicPort.clone();
-        self.Type = source.Type.clone();
-    }*/</span>
 }
 
 <span class='kw'>impl</span> <span class='ident'>Clone</span> <span class='kw'>for</span> <span class='ident'>HostConfig</span> {
@@ -342,8 +328,8 @@
     }
 }
 
-<span class='kw'>impl</span> <span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>ContainerInfo</span> {
-    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(), <span class='ident'>Error</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Display</span> <span class='kw'>for</span> <span class='ident'>ContainerInfo</span> {
+    <span class='kw'>fn</span> <span class='ident'>fmt</span>(<span class='kw-2'>&amp;</span><span class='self'>self</span>, <span class='ident'>f</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Formatter</span>) <span class='op'>-&gt;</span> <span class='ident'>std</span>::<span class='ident'>result</span>::<span class='prelude-ty'>Result</span><span class='op'>&lt;</span>(), <span class='ident'>std</span>::<span class='ident'>fmt</span>::<span class='ident'>Error</span><span class='op'>&gt;</span> {
         <span class='macro'>write</span><span class='macro'>!</span>(<span class='ident'>f</span>, <span class='string'>&quot;{}&quot;</span>, <span class='self'>self</span>.<span class='ident'>Id</span>)
     }
 }
