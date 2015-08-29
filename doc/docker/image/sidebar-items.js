@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Image",""]]});
+initSidebarItems({"struct":[["Image",""],["ImageStatus",""]]});
