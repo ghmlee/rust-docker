@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["container",""],["filesystem",""],["image",""],["process",""],["stats",""],["system",""]],"struct":[["Docker",""]]});
+initSidebarItems({"mod":[["container",""],["filesystem",""],["image",""],["process",""],["stats",""],["system",""],["version",""]],"struct":[["Docker",""]]});
