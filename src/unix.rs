@@ -1,65 +1,119 @@
 use std;
-use std::io::{Read, Write};
-use std::error::Error;
+use std::fmt;
+use std::io;
+use std::io::{ErrorKind, Read, Write};
+use std::net::{SocketAddr, ToSocketAddrs, SocketAddrV4, Ipv4Addr, Shutdown};
+use std::time::Duration;
+use unix_socket::UnixStream;
+use hyper;
+use hyper::net::{NetworkConnector, NetworkStream};
 
-use unix_socket;
+pub struct HttpUnixStream(pub UnixStream);
 
-pub struct UnixStream {
-    stream: unix_socket::UnixStream
+impl Clone for HttpUnixStream {
+    #[inline]
+    fn clone(&self) -> HttpUnixStream {
+        HttpUnixStream(self.0.try_clone().unwrap())
+    }
 }
 
-impl UnixStream {
-    pub fn connect(addr: &str) -> std::io::Result<UnixStream> {
-        let stream = try!(unix_socket::UnixStream::connect(addr));
-        
-        let unix_stream = UnixStream {
-            stream: stream
-        };
-        
-        return Ok(unix_stream);
+impl fmt::Debug for HttpUnixStream {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("HttpUnixStream(_)")
     }
-    
-    pub fn read(&mut self, buf: &[u8]) -> std::io::Result<Vec<u8>> {
-        let mut stream = self.stream.try_clone().unwrap();
-        
-        match stream.write_all(buf) {
-            Ok(_) => {}
-            Err(e) => {
-                let err = std::io::Error::new(std::io::ErrorKind::ConnectionAborted,
-                                              e.description());
-                return Err(err);
-            }
-        };
+}
 
-        const BUFFER_SIZE: usize = 1024;
-        let mut buffer: [u8; BUFFER_SIZE] = [0; BUFFER_SIZE];
-        let mut raw: Vec<u8> = Vec::new();
-        loop {
-            let len = match stream.read(&mut buffer) {
-                Ok(len) => len,
-                Err(e) => {
-                    let err = std::io::Error::new(std::io::ErrorKind::ConnectionAborted,
-                                                  e.description());
-                    return Err(err);
-                }
-            };
-            
-            for i in 0..len { raw.push(buffer[i]); }
+impl Read for HttpUnixStream {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.0.read(buf)
+    }
+}
 
-            if len > 4 && buffer[len - 5] == 48 && buffer[len - 4] == 13 && buffer[len - 3] == 10 && buffer[len - 2] == 13 && buffer[len - 1] == 10 { break; }
-            if len > 1 && buffer[len - 2] == 13 && buffer[len - 1] == 10 { continue; }
-            if len < BUFFER_SIZE { break; }
+impl Write for HttpUnixStream {
+    #[inline]
+    fn write(&mut self, msg: &[u8]) -> io::Result<usize> {
+        self.0.write(msg)
+    }
+
+    #[inline]
+    fn flush(&mut self) -> io::Result<()> {
+        self.0.flush()
+    }
+}
+
+#[cfg(windows)]
+impl ::std::os::windows::io::AsRawSocket for HttpUnixStream {
+    fn as_raw_socket(&self) -> ::std::os::windows::io::RawSocket {
+        self.0.as_raw_socket()
+    }
+}
+
+#[cfg(windows)]
+impl ::std::os::windows::io::FromRawSocket for HttpUnixStream {
+    unsafe fn from_raw_socket(sock: ::std::os::windows::io::RawSocket) -> HttpUnixStream {
+        HttpUnixStream(UnixStream::from_raw_socket(sock))
+    }
+}
+
+#[cfg(unix)]
+impl ::std::os::unix::io::AsRawFd for HttpUnixStream {
+    fn as_raw_fd(&self) -> ::std::os::unix::io::RawFd {
+        self.0.as_raw_fd()
+    }
+}
+
+#[cfg(unix)]
+impl ::std::os::unix::io::FromRawFd for HttpUnixStream {
+    unsafe fn from_raw_fd(fd: ::std::os::unix::io::RawFd) -> HttpUnixStream {
+        HttpUnixStream(UnixStream::from_raw_fd(fd))
+    }
+}
+
+impl NetworkStream for HttpUnixStream {
+    #[inline]
+    fn peer_addr(&mut self) -> io::Result<SocketAddr> {
+        Ok(SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 80)))
+    }
+
+    #[inline]
+    fn set_read_timeout(&self, dur: Option<Duration>) -> io::Result<()> {
+        self.0.set_read_timeout(dur)
+    }
+
+    #[inline]
+    fn set_write_timeout(&self, dur: Option<Duration>) -> io::Result<()> {
+        self.0.set_write_timeout(dur)
+    }
+
+    #[inline]
+    fn close(&mut self, how: Shutdown) -> io::Result<()> {
+        match self.0.shutdown(how) {
+            Ok(_) => Ok(()),
+            // see https://github.com/hyperium/hyper/issues/508
+            Err(ref e) if e.kind() == ErrorKind::NotConnected => Ok(()),
+            err => err
         }
-        return Ok(raw);
     }
 }
 
-impl Clone for UnixStream {
-    fn clone(&self) -> Self {
-        let stream = UnixStream {
-            stream: self.stream.try_clone().unwrap()
-        };
-        
-        return stream;
+#[derive(Debug, Clone, Default)]
+pub struct HttpUnixConnector {
+    path: String,
+}
+
+impl HttpUnixConnector {
+    pub fn new(path: &String) -> HttpUnixConnector {
+        HttpUnixConnector {
+            path: path.clone(),
+        }
+    }
+}
+
+impl NetworkConnector for HttpUnixConnector {
+    type Stream = HttpUnixStream;
+
+    fn connect(&self, host: &str, port: u16, scheme: &str) -> hyper::error::Result<HttpUnixStream> {
+        Ok(HttpUnixStream(try!(UnixStream::connect(self.path.clone()))))
     }
 }
