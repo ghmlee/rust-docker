@@ -64,7 +64,7 @@ impl TcpStream {
         }
         
         let stream = self.stream.try_clone().unwrap();
-        let ssl_stream = match openssl::ssl::SslStream::new(&context, stream) {
+        let ssl_stream = match openssl::ssl::SslStream::connect(&context, stream) {
             Ok(ssl_stream) => ssl_stream,
             Err(e) => {
                 let err = std::io::Error::new(std::io::ErrorKind::NotConnected,
